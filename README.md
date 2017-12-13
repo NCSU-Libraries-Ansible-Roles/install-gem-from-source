@@ -1,2 +1,3 @@
 # install-gem-from-source
-role to install updated gem from source
+
+Installs the most recent version of a gem from git master.

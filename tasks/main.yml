@@ -1,0 +1,35 @@
+---
+- name: "{{ gem }} | uninstall current {{ gem }} gems"
+  gem:
+    executable: /usr/local/rvm/wrappers/default/gem
+    name: "{{ gem }}"
+    state: absent
+- name: "{{ gem }} | git clone"
+  git:
+    repo: "{{ repo }}"
+    dest: "/root/{{ gem }}"
+    accept_hostkey: yes
+    depth: 1
+- name: "{{ gem }} | build gem"
+  shell: "/usr/local/rvm/wrappers/default/gem build {{ gem }}.gemspec"
+  args:
+    chdir: "/root/{{ gem }}"
+- name: "{{ gem }} | get name of current gem"
+  shell: "ls /root/{{ gem }}/{{ gem }}-*.gem"
+  register: gem_name_result
+- name: "{{ gem }} | install gem"
+  gem:
+    executable: /usr/local/rvm/wrappers/default/gem
+    name: "{{ gem }}"
+    gem_source: "{{ item }}"
+    user_install: no
+    state: present
+  with_items: "{{ gem_name_result.stdout_lines }}"
+- name: "{{ gem }} | remove repo completely"
+  file:
+    path: "/root/{{ gem }}"
+    state: absent
+
+# TODO: Not sure why this is necessary but it fixes some permissions problems
+- name: "{{ gem }} | auto-dotfiles"
+  command: /bin/bash -lc 'rvm get stable --auto-dotfiles'
